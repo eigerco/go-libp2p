@@ -3,6 +3,7 @@ module github.com/libp2p/go-libp2p/examples
 go 1.20
 
 require (
+	github.com/agnivade/wasmbrowsertest v0.7.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.3.0
 	github.com/ipfs/go-datastore v0.6.0
@@ -14,6 +15,7 @@ require (
 )
 
 require (
+	github.com/Jorropo/jhttp v1.0.0 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
