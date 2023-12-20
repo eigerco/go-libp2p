@@ -62,6 +62,10 @@ func new(key ic.PrivKey, psk pnet.PSK, gater connmgr.ConnectionGater, rcmgr netw
 		gater:   gater,
 		clock:   clock.New(),
 	}
+	if beforeOpt != nil {
+		beforeOpt(t)
+	}
+
 	for _, opt := range opts {
 		if err := opt(t); err != nil {
 			return nil, err

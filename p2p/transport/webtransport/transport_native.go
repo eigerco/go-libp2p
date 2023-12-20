@@ -3,6 +3,7 @@
 package libp2pwebtransport
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -19,6 +20,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/pnet"
 	tpt "github.com/libp2p/go-libp2p/core/transport"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	"github.com/libp2p/go-libp2p/p2p/security/noise/pb"
 	"github.com/libp2p/go-libp2p/p2p/transport/quicreuse"
 
 	"github.com/benbjohnson/clock"
@@ -157,9 +159,41 @@ func (t *transport) upgrade(ctx context.Context, sess *webtransport.Session, p p
 	}
 	defer str.Close()
 
-	c, err := t.verifyChallengeOnOutboundConnection(ctx, &webtransportStream{Stream: str, wsess: sess}, p, certHashes)
+	// Now run a Noise handshake (using early data) and get all the certificate hashes from the server.
+	// We will verify that the certhashes we used to dial is a subset of the certhashes we received from the server.
+	var verified bool
+	n, err := t.noise.WithSessionOptions(noise.EarlyData(newEarlyDataReceiver(func(b *pb.NoiseExtensions) error {
+		decodedCertHashes, err := decodeCertHashesFromProtobuf(b.WebtransportCerthashes)
+		if err != nil {
+			return err
+		}
+		for _, sent := range certHashes {
+			var found bool
+			for _, rcvd := range decodedCertHashes {
+				if sent.Code == rcvd.Code && bytes.Equal(sent.Digest, rcvd.Digest) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("missing cert hash: %v", sent)
+			}
+		}
+		verified = true
+		return nil
+	}), nil))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Noise transport: %w", err)
+	}
+	c, err := n.SecureOutbound(ctx, &webtransportStream{Stream: str, wsess: sess}, p)
 	if err != nil {
 		return nil, err
+	}
+	defer c.Close()
+	// The Noise handshake _should_ guarantee that our verification callback is called.
+	// Double-check just in case.
+	if !verified {
+		return nil, errors.New("didn't verify")
 	}
 	return &connSecurityMultiaddrs{
 		ConnSecurity:   c,
@@ -168,9 +202,12 @@ func (t *transport) upgrade(ctx context.Context, sess *webtransport.Session, p p
 }
 
 func (t *transport) Listen(laddr ma.Multiaddr) (tpt.Listener, error) {
-	isWebTransport, _ := IsWebtransportMultiaddr(laddr)
+	isWebTransport, certhashCount := IsWebtransportMultiaddr(laddr)
 	if !isWebTransport {
 		return nil, fmt.Errorf("cannot listen on non-WebTransport addr: %s", laddr)
+	}
+	if certhashCount > 0 {
+		return nil, fmt.Errorf("cannot listen on a specific certhash non-WebTransport addr: %s", laddr)
 	}
 	if t.staticTLSConf == nil {
 		t.listenOnce.Do(func() {
