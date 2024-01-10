@@ -2,6 +2,7 @@ package conngater
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"sync"
 
@@ -62,6 +63,7 @@ func NewBasicConnectionGater(ds datastore.Datastore) (*BasicConnectionGater, err
 }
 
 func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
+	fmt.Println("LOADING RULES -  @TODO FIX loadRules")
 	// load blocked peers
 	res, err := cg.ds.Query(ctx, query.Query{Prefix: keyPeer})
 	if err != nil {
@@ -69,15 +71,18 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 		return err
 	}
 
-	for r := range res.Next() {
-		if r.Error != nil {
-			log.Errorf("query result error: %s", r.Error)
-			return err
-		}
+	// @TODO (Nevio): It is blocking here indefinetly if enabled from wasm. Not quite sure what is
+	// the cause of it.
+	/* 	for r := range res.Next() {
+	   		if r.Error != nil {
+	   			log.Errorf("query result error: %s", r.Error)
+	   			return err
+	   		}
 
-		p := peer.ID(r.Entry.Value)
-		cg.blockedPeers[p] = struct{}{}
-	}
+	   		p := peer.ID(r.Entry.Value)
+	   		cg.blockedPeers[p] = struct{}{}
+	   	}
+	*/
 
 	// load blocked addrs
 	res, err = cg.ds.Query(ctx, query.Query{Prefix: keyAddr})
@@ -86,16 +91,16 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 		return err
 	}
 
-	for r := range res.Next() {
-		if r.Error != nil {
-			log.Errorf("query result error: %s", r.Error)
-			return err
-		}
+	/* 	for r := range res.Next() {
+	   		if r.Error != nil {
+	   			log.Errorf("query result error: %s", r.Error)
+	   			return err
+	   		}
 
-		ip := net.IP(r.Entry.Value)
-		cg.blockedAddrs[ip.String()] = struct{}{}
-	}
-
+	   		ip := net.IP(r.Entry.Value)
+	   		cg.blockedAddrs[ip.String()] = struct{}{}
+	   	}
+	*/
 	// load blocked subnets
 	res, err = cg.ds.Query(ctx, query.Query{Prefix: keySubnet})
 	if err != nil {
@@ -103,7 +108,7 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 		return err
 	}
 
-	for r := range res.Next() {
+	/* 	for r := range res.Next() {
 		if r.Error != nil {
 			log.Errorf("query result error: %s", r.Error)
 			return err
@@ -116,8 +121,9 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 			return err
 		}
 		cg.blockedSubnets[ipnetStr] = ipnet
-	}
+	} */
 
+	_ = res
 	return nil
 }
 
