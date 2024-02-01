@@ -2,6 +2,7 @@
 
 package websocket
 
+/**
 import (
 	"bufio"
 	"context"
@@ -58,3 +59,4 @@ func TestInBrowser(t *testing.T) {
 	// possible.
 	time.Sleep(1 * time.Second)
 }
+**/

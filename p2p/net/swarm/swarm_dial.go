@@ -303,6 +303,7 @@ func (s *Swarm) addrsForDial(ctx context.Context, p peer.ID) (goodAddrs []ma.Mul
 
 	// Resolve dns or dnsaddrs
 	resolved, err := s.resolveAddrs(ctx, peer.AddrInfo{ID: p, Addrs: peerAddrs})
+	//fmt.Printf("TRACE WHAT IS RESOLVED IN ADDRS FOR DIAL: %v - err: %s \n", resolved, err)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -323,6 +324,7 @@ func (s *Swarm) addrsForDial(ctx context.Context, p peer.ID) (goodAddrs []ma.Mul
 }
 
 func (s *Swarm) resolveAddrs(ctx context.Context, pi peer.AddrInfo) ([]ma.Multiaddr, error) {
+	//fmt.Printf("TRACE RESOLVE-ADDR PEERS: %+v \n", pi)
 	p2paddr, err := ma.NewMultiaddr("/" + ma.ProtocolWithCode(ma.P_P2P).Name + "/" + pi.ID.String())
 	if err != nil {
 		return nil, err
@@ -337,6 +339,7 @@ func (s *Swarm) resolveAddrs(ctx context.Context, pi peer.AddrInfo) ([]ma.Multia
 	// * Otherwise, resolve it and add the results to the "to resolve" list.
 	toResolve := append([]ma.Multiaddr{}, pi.Addrs...)
 	resolved := make([]ma.Multiaddr, 0, len(pi.Addrs))
+	//return resolved, nil
 	for len(toResolve) > 0 {
 		// pop the last addr off.
 		addr := toResolve[len(toResolve)-1]
