@@ -81,6 +81,7 @@ func (c *conn) AcceptStream() (network.MuxedStream, error) {
 
 	r, err := await(context.Background(), c.incoming.Call("read"))
 	if err != nil {
+
 		return nil, err
 	}
 	o := r[0]

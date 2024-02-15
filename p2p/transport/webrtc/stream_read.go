@@ -88,7 +88,10 @@ func (s *stream) CloseRead() error {
 	}
 	var err error
 	if s.receiveState == receiveStateReceiving && s.closeErr == nil {
-		err = s.sendControlMessage(&pb.Message{Flag: pb.Message_STOP_SENDING.Enum()})
+		err = s.sendControlMessage(&pb.Message{
+			Flag:    pb.Message_STOP_SENDING.Enum(),
+			Message: []byte("Well hello there..."),
+		})
 	}
 	s.receiveState = receiveStateReset
 	s.maybeDeclareStreamDone()
