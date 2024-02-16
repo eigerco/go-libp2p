@@ -155,14 +155,6 @@ func (cfg *Config) makeSwarm(eventBus event.Bus, enableMetrics bool) (*swarm.Swa
 		return nil, err
 	}
 
-	fmt.Printf(
-		"MAKE SWARM - Public Key: %v - Peer Key: %+v - Peer PID: %v - Event Bus: %v \n",
-		cfg.PeerKey.GetPublic(),
-		cfg.PeerKey,
-		pid,
-		eventBus,
-	)
-
 	if err := cfg.Peerstore.AddPrivKey(pid, cfg.PeerKey); err != nil {
 		return nil, err
 	}
