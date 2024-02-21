@@ -1,4 +1,4 @@
-//go:build !wasm
+//go:build wasm
 
 package pstoreds
 
@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -280,10 +279,12 @@ func (ab *dsAddrBook) AddAddrs(p peer.ID, addrs []ma.Multiaddr, ttl time.Duratio
 		return
 	}
 
-	pc, _, _, _ := runtime.Caller(1)
-	callerFunc := runtime.FuncForPC(pc)
-	fmt.Println("DEBUG - ADDRESS BOOK - ADD ADDRS - FUNCTION CALLING IT", p, addrs, callerFunc.Name())
+	/*	pc, _, _, _ := runtime.Caller(1)
+		callerFunc := runtime.FuncForPC(pc)
 
+
+		fmt.Println("DEBUG - ADDRESS BOOK - ADD ADDRS - FUNCTION CALLING IT", p, addrs, callerFunc.Name())
+	*/
 	addrs = cleanAddrs(addrs, p)
 	ab.setAddrs(p, addrs, ttl, ttlExtend, false)
 }
@@ -609,6 +610,12 @@ func (ab *dsAddrBook) deleteAddrs(p peer.ID, addrs []ma.Multiaddr) (err error) {
 func cleanAddrs(addrs []ma.Multiaddr, pid peer.ID) []ma.Multiaddr {
 	clean := make([]ma.Multiaddr, 0, len(addrs))
 	for _, addr := range addrs {
+
+		// Only webtransport addresses should be stored and used with wasm.
+		if !isWebtransportPeer(addr) {
+			continue
+		}
+
 		// Remove suffix of /p2p/peer-id from address
 		addr, addrPid := peer.SplitAddr(addr)
 		if addr == nil {
@@ -622,4 +629,29 @@ func cleanAddrs(addrs []ma.Multiaddr, pid peer.ID) []ma.Multiaddr {
 		clean = append(clean, addr)
 	}
 	return clean
+}
+
+// Function to check if a peer is a secure IPv4 web transport, containing certhash. Has to be UDP too.
+// WASM supports connectivity over go-libp2p only with these peers. DNS or IPv6 is not supported.
+func isWebtransportPeer(addr ma.Multiaddr) bool {
+	var hasIPv4, hasUDP, hasWebtransport, hasCerthash bool
+
+	for _, protocol := range addr.Protocols() {
+		switch protocol.Code {
+		case ma.P_IP4:
+			hasIPv4 = true
+		case ma.P_UDP:
+			hasUDP = true
+		case ma.P_WEBTRANSPORT:
+			hasWebtransport = true
+		case ma.P_CERTHASH:
+			hasCerthash = true
+		}
+	}
+
+	if hasIPv4 && hasUDP && hasWebtransport && hasCerthash {
+		return true
+	}
+
+	return false
 }
