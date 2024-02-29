@@ -71,7 +71,7 @@ func (c *conn) openStream(ctx context.Context) (*stream, error) {
 		return nil, fmt.Errorf("createBidirectionalStream: %w", err)
 	}
 
-	return newStream(r[0], c), nil
+	return newStream(r[0], c)
 }
 
 func (c *conn) AcceptStream() (network.MuxedStream, error) {
@@ -88,7 +88,7 @@ func (c *conn) AcceptStream() (network.MuxedStream, error) {
 	s := o.Get("value")
 	c.done = o.Get("done").Bool()
 
-	return newStream(s, c), nil
+	return newStream(s, c)
 }
 
 func (c *conn) Close() error {

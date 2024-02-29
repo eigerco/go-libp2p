@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -345,6 +347,11 @@ func (s *Swarm) resolveAddrs(ctx context.Context, pi peer.AddrInfo) ([]ma.Multia
 		addr := toResolve[len(toResolve)-1]
 		toResolve = toResolve[:len(toResolve)-1]
 
+		// Do not allow peers that are not secure webtransport
+		if !isWebtransportPeer(addr) {
+			continue
+		}
+
 		// if it's resolved, add it to the resolved list.
 		if !madns.Matches(addr) {
 			resolved = append(resolved, addr)
@@ -403,6 +410,38 @@ func (s *Swarm) resolveAddrs(ctx context.Context, pi peer.AddrInfo) ([]ma.Multia
 	}
 
 	return resolved, nil
+}
+
+// Function to check if a peer is a secure IPv4 web transport, containing certhash. Has to be UDP too.
+// WASM supports connectivity over go-libp2p only with these peers. DNS or IPv6 is not supported.
+func isWebtransportPeer(addr ma.Multiaddr) bool {
+	var hasIPv4, hasUDP, hasWebtransport, hasCerthash bool
+
+	for _, protocol := range addr.Protocols() {
+		switch protocol.Code {
+		case ma.P_IP4:
+			hasIPv4 = true
+		case ma.P_UDP:
+			hasUDP = true
+		case ma.P_WEBTRANSPORT:
+			hasWebtransport = true
+		case ma.P_CERTHASH:
+			hasCerthash = true
+		}
+	}
+
+	if hasIPv4 && hasUDP && hasWebtransport && hasCerthash {
+
+		if strings.Contains(addr.String(), "127.0.0.1") ||
+			strings.Contains(addr.String(), "172.") {
+			return false
+		}
+
+		zap.L().Info("Discovered WebTransport peer addr info", zap.Any("peer", addr.String()), zap.Any("protocol", addr.Protocols()))
+		return true
+	}
+
+	return false
 }
 
 func (s *Swarm) dialNextAddr(ctx context.Context, p peer.ID, addr ma.Multiaddr, resch chan transport.DialUpdate) error {

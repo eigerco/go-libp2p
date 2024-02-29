@@ -4,6 +4,7 @@ package libp2pwebtransport
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
 	"sync"
@@ -24,13 +25,16 @@ type stream struct {
 	deadline, readDeadline, writeDeadline atomic.Pointer[time.Time]
 }
 
-func newStream(s js.Value, c *conn) *stream {
+func newStream(s js.Value, c *conn) (*stream, error) {
+	if s.IsUndefined() {
+		return nil, errors.New("stream could not be established")
+	}
 	return &stream{
 		read:    s.Get("readable").Call("getReader"),
 		write:   s.Get("writable").Call("getWriter"),
 		readBuf: js.Global().Get("Uint8Array").New(0),
 		conn:    c,
-	}
+	}, nil
 }
 
 func (s *stream) Read(b []byte) (n int, err error) {
