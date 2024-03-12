@@ -126,7 +126,7 @@ func await(ctx context.Context, v js.Value) (success []js.Value, err error) {
 				errs = append(errs, errors.New(v.String()))
 			}
 		}
-		err = fmt.Errorf("JS catch: %w", multierr.Combine(errs...))
+		err = fmt.Errorf("await errors: %w", multierr.Combine(errs...))
 		c <- struct{}{}
 		s.Release()
 		f.Release()

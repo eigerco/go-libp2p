@@ -483,7 +483,6 @@ func (ab *dsAddrBook) setAddrs(p peer.ID, addrs []ma.Multiaddr, ttl time.Duratio
 	if len(addrs) == 0 {
 		return nil
 	}
-
 	pr, err := ab.loadRecord(p, true, false)
 	if err != nil {
 		return fmt.Errorf("failed to load peerstore entry for peer %s while setting addrs, err: %v", p, err)

@@ -687,13 +687,13 @@ func (h *BasicHost) NewStream(ctx context.Context, p peer.ID, pids ...protocol.I
 	case err = <-errCh:
 		if err != nil {
 			s.Reset()
-			return nil, fmt.Errorf("failed to negotiate protocol: %w", err)
+			return nil, fmt.Errorf("failed to negotiate protocol (1): %w", err)
 		}
 	case <-ctx.Done():
 		s.Reset()
 		// wait for `SelectOneOf` to error out because of resetting the stream.
 		<-errCh
-		return nil, fmt.Errorf("failed to negotiate protocol: %w", ctx.Err())
+		return nil, fmt.Errorf("failed to negotiate protocol (2): %w", ctx.Err())
 	}
 
 	s.SetProtocol(selected)
