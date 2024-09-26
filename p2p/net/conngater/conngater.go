@@ -63,13 +63,13 @@ func NewBasicConnectionGater(ds datastore.Datastore) (*BasicConnectionGater, err
 
 func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 	// load blocked peers
-	res, err := cg.ds.Query(ctx, query.Query{Prefix: keyPeer})
+	_, err := cg.ds.Query(ctx, query.Query{Prefix: keyPeer})
 	if err != nil {
 		log.Errorf("error querying datastore for blocked peers: %s", err)
 		return err
 	}
 
-	for r := range res.Next() {
+	/* 	for r := range res.Next() {
 		if r.Error != nil {
 			log.Errorf("query result error: %s", r.Error)
 			return err
@@ -77,16 +77,16 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 
 		p := peer.ID(r.Entry.Value)
 		cg.blockedPeers[p] = struct{}{}
-	}
+	} */
 
 	// load blocked addrs
-	res, err = cg.ds.Query(ctx, query.Query{Prefix: keyAddr})
+	_, err = cg.ds.Query(ctx, query.Query{Prefix: keyAddr})
 	if err != nil {
 		log.Errorf("error querying datastore for blocked addrs: %s", err)
 		return err
 	}
 
-	for r := range res.Next() {
+	/* 	for r := range res.Next() {
 		if r.Error != nil {
 			log.Errorf("query result error: %s", r.Error)
 			return err
@@ -94,16 +94,16 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 
 		ip := net.IP(r.Entry.Value)
 		cg.blockedAddrs[ip.String()] = struct{}{}
-	}
+	} */
 
 	// load blocked subnets
-	res, err = cg.ds.Query(ctx, query.Query{Prefix: keySubnet})
+	_, err = cg.ds.Query(ctx, query.Query{Prefix: keySubnet})
 	if err != nil {
 		log.Errorf("error querying datastore for blocked subnets: %s", err)
 		return err
 	}
 
-	for r := range res.Next() {
+	/* 	for r := range res.Next() {
 		if r.Error != nil {
 			log.Errorf("query result error: %s", r.Error)
 			return err
@@ -116,7 +116,7 @@ func (cg *BasicConnectionGater) loadRules(ctx context.Context) error {
 			return err
 		}
 		cg.blockedSubnets[ipnetStr] = ipnet
-	}
+	} */
 
 	return nil
 }

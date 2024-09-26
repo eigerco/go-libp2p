@@ -159,7 +159,7 @@ func (bh *BlankHost) NewStream(ctx context.Context, p peer.ID, protos ...protoco
 	selected, err := mstream.SelectOneOf(protos, s)
 	if err != nil {
 		s.Reset()
-		return nil, fmt.Errorf("failed to negotiate protocol: %w", err)
+		return nil, fmt.Errorf("failed to negotiate protocol (3): %w", err)
 	}
 
 	s.SetProtocol(selected)

@@ -1,9 +1,12 @@
+//go:build !wasm
+
 package pstoreds
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -276,6 +279,11 @@ func (ab *dsAddrBook) AddAddrs(p peer.ID, addrs []ma.Multiaddr, ttl time.Duratio
 	if ttl <= 0 {
 		return
 	}
+
+	pc, _, _, _ := runtime.Caller(1)
+	callerFunc := runtime.FuncForPC(pc)
+	fmt.Println("DEBUG - ADDRESS BOOK - ADD ADDRS - FUNCTION CALLING IT", p, addrs, callerFunc.Name())
+
 	addrs = cleanAddrs(addrs, p)
 	ab.setAddrs(p, addrs, ttl, ttlExtend, false)
 }

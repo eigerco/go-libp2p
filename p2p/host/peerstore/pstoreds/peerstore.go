@@ -161,12 +161,16 @@ func (ps *pstoreds) Peers() peer.IDSlice {
 	for _, p := range ps.PeersWithKeys() {
 		set[p] = struct{}{}
 	}
+
 	for _, p := range ps.PeersWithAddrs() {
 		set[p] = struct{}{}
 	}
 
+	// TODO: We should ensure that only web transport peers for wasm are loaded back as peer.IDSlice
+
 	pps := make(peer.IDSlice, 0, len(set))
 	for p := range set {
+
 		pps = append(pps, p)
 	}
 	return pps
